@@ -1,17 +1,83 @@
+
 import React, { useState, useRef } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { parseStandardPlayerCSV, parseTeamsCSV } from '../utils/csvHelpers';
-import { X, Upload, Database, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Upload, Database, RefreshCw, CheckCircle, AlertCircle, Stars } from 'lucide-react';
 
 interface DataManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const OFFICIAL_PLAYER_CSV = `id,name,category,role
+A01,Mezanul Hoque Chy,A,Bowler
+A02,M Rashidur Rahman Rafi,A,All Rounder
+A03,Md Muktadir Maula,A,All Rounder
+A04,Kazi Moin,A,Openning Batter
+A05,Monir Hossain,A,All Rounder
+B01,Mohammed Ashfaq Raiyan,B,Middle Order Batter
+B02,Ishraq Ahmed Esha,B,Middle Order Batter
+B03,Hasibul Islam,B,All Rounder
+B04,Rubel Alfaz,B,All Rounder
+B05,Abdullah Umar Nasib,B,Wicket-Keeper
+B06,Sayed Ahmed Tasin,B,All Rounder
+B07,Mohammad Abdur Rafi Farhab,B,Middle Order Batter
+B08,Abid Mahadi,B,Openning Batter
+B09,Sheikh Ahaduzzaman,B,Bowler
+B10,Tanvir Chowdhury,B,All Rounder
+C01,Prattay Iqbal,C,Wicket-Keeper
+C02,Ariful Islam,C,Bowler
+C03,Al Mohammad Aladin,C,Openning Batter
+C04,Mirza Mehedi Iqbal,C,Bowler
+C05,Syed Ishmum Ahnaf,C,Bowler
+C06,Nabil Hossain,C,Middle Order Batter
+C07,Raihan Mastafa Khiljee,C,Bowler
+C08,Md. Yeasin Gazi,C,Openning Batter
+C09,Md. Kaium,C,Middle Order Batter
+C10,Md. Ali,C,Bowler
+C11,Rupam Shangma,C,All Rounder
+C12,Joyel,C,Middle Order Batter
+C13,Anindro Kumar Roy (Joy),C,All Rounder
+C14,Sahab-Al-Chowdhury,C,Middle Order Batter
+C15,Zahidul Islam,C,All Rounder
+C16,Mukhlesur Rahman,C,Middle Order Batter
+C17,Sameer Shafayet Latif,C,Openning Batter
+C18,Saifullah Khalid Jubaer,C,All Rounder
+C19,Md Shajjad Howlader,C,Openning Batter
+C20,Md. Rafin Jawad Hafiz,C,Openning Batter
+C21,Kashshaf Mahbub Sakif,C,All Rounder
+C22,Niloy Roy,C,Middle Order Batter
+C23,Faysal Moin Ahsan,C,All Rounder
+C24,Abeer Mahmood Kalam,C,Openning Batter
+C25,Redwan Rifat Fahim,C,Openning Batter
+C26,Tabiul Hasan,C,Middle Order Batter
+C27,Mohammad Masuk Imtiaz,C,Middle Order Batter
+C28,Hasin Ibtida,C,Bowler
+C29,Joy Sarker,C,Bowler
+C30,Apurbo Banik Turjo,C,All Rounder
+C31,Mostofa Washif,C,All Rounder
+C32,Iftekhar Ahmed Ifty,C,Middle Order Batter
+C33,Imran Hossain,C,Openning Batter
+C34,Subrata Nath,C,Bowler
+C35,Fahim Mushfiq,C,Middle Order Batter
+C36,Sakif Yeaser,C,Middle Order Batter
+C37,Ove Bepari,C,Middle Order Batter
+C38,Sunjare Zulfiker,C,Middle Order Batter
+C39,Tawratur Rashid,C,Openning Batter
+C40,Shoeb Akibul Islam,C,Wicket-Keeper
+C41,Partha Sarothi Bhowmik,C,Openning Batter
+C42,MD Tuhin Ahmed,C,Middle Order Batter
+C43,Manzil hasan,C,Bowler
+C44,Nasim Ahmed,C,All Rounder
+C45,Tanzim,C,Bowler
+C46,Moontasir Mamun,C,Middle Order Batter
+C47,Md Sifat Hossain,C,Bowler`;
+
 export const DataManagementModal = ({ isOpen, onClose }: DataManagementModalProps) => {
   const { importPlayers, importTeams, resetAuction } = useAuction();
   const [activeTab, setActiveTab] = useState<'upload_players' | 'upload_teams' | 'reset'>('upload_players');
   const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
   const playerFileInputRef = useRef<HTMLInputElement>(null);
   const teamFileInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -24,7 +90,18 @@ export const DataManagementModal = ({ isOpen, onClose }: DataManagementModalProp
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // --- ACTIONS ---
+  const handleSeedOfficialPlayers = async () => {
+    if (confirm('Overwrite with official players?')) {
+      setIsSeeding(true);
+      try {
+        const importedPlayers = parseStandardPlayerCSV(OFFICIAL_PLAYER_CSV);
+        await importPlayers(importedPlayers);
+        showNotification(`Successfully seeded ${importedPlayers.length} players!`, 'success');
+      } catch (err: any) {
+        showNotification(`Failed: ${err.message}`, 'error');
+      } finally { setIsSeeding(false); }
+    }
+  };
 
   const handlePlayerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,16 +112,9 @@ export const DataManagementModal = ({ isOpen, onClose }: DataManagementModalProp
         if (text) {
           try {
             const importedPlayers = parseStandardPlayerCSV(text);
-            if (importedPlayers.length > 0) {
-              await importPlayers(importedPlayers);
-              showNotification(`Imported ${importedPlayers.length} players successfully!`, 'success');
-              if (playerFileInputRef.current) playerFileInputRef.current.value = '';
-            } else {
-              showNotification('No valid players found. Check CSV format (ID, Name, Category, Role)', 'error');
-            }
-          } catch (err: any) {
-            showNotification(`Failed to import players: ${err.message}`, 'error');
-          }
+            await importPlayers(importedPlayers);
+            showNotification(`Imported ${importedPlayers.length} players!`, 'success');
+          } catch (err: any) { showNotification(err.message, 'error'); }
         }
       };
       reader.readAsText(file);
@@ -60,16 +130,9 @@ export const DataManagementModal = ({ isOpen, onClose }: DataManagementModalProp
         if (text) {
           try {
              const importedTeams = parseTeamsCSV(text);
-             if (importedTeams.length > 0) {
-                 await importTeams(importedTeams);
-                 showNotification(`Imported ${importedTeams.length} teams successfully! Previous teams replaced.`, 'success');
-                 if (teamFileInputRef.current) teamFileInputRef.current.value = '';
-             } else {
-                 showNotification('No valid teams found. Check CSV format (ID, Name)', 'error');
-             }
-          } catch (err: any) {
-             showNotification(`Failed to import teams: ${err.message}`, 'error');
-          }
+             await importTeams(importedTeams);
+             showNotification(`Imported ${importedTeams.length} teams!`, 'success');
+          } catch (err: any) { showNotification(err.message, 'error'); }
         }
       };
       reader.readAsText(file);
@@ -77,144 +140,62 @@ export const DataManagementModal = ({ isOpen, onClose }: DataManagementModalProp
   };
 
   const handleResetState = async () => {
-       if (confirm('This will RESET the auction progress. All players will become AVAILABLE and team budgets will be restored. No data will be deleted. Continue?')) {
+       if (confirm('Reset auction floor?')) {
            try {
-               await resetAuction(true); // true = keep players/teams, just reset state
-               showNotification('Auction state has been reset to default.', 'success');
-           } catch(e: any) {
-               showNotification(e.message || 'Reset failed.', 'error');
-           }
+               await resetAuction(true); 
+               showNotification('Auction reset.', 'success');
+           } catch(e: any) { showNotification(e.message, 'error'); }
        }
   }
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        
-        {/* Header */}
         <div className="bg-slate-900 px-6 py-4 flex items-center justify-between border-b border-slate-700">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <Database className="w-5 h-5 text-emerald-500" /> Manage Data
             </h2>
-            <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-                <X className="w-6 h-6" />
-            </button>
+            <button onClick={onClose} className="text-slate-400 hover:text-white"><X className="w-6 h-6" /></button>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-slate-700">
-            <button 
-                onClick={() => setActiveTab('upload_players')}
-                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'upload_players' ? 'bg-slate-800 text-emerald-400 border-b-2 border-emerald-500' : 'bg-slate-900/50 text-slate-400 hover:text-slate-200'}`}
-            >
-                Upload Players
-            </button>
-            <button 
-                onClick={() => setActiveTab('upload_teams')}
-                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'upload_teams' ? 'bg-slate-800 text-emerald-400 border-b-2 border-emerald-500' : 'bg-slate-900/50 text-slate-400 hover:text-slate-200'}`}
-            >
-                Upload Teams
-            </button>
-            <button 
-                onClick={() => setActiveTab('reset')}
-                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'reset' ? 'bg-slate-800 text-amber-400 border-b-2 border-amber-500' : 'bg-slate-900/50 text-slate-400 hover:text-slate-200'}`}
-            >
-                Reset State
-            </button>
+            <button onClick={() => setActiveTab('upload_players')} className={`flex-1 py-3 text-sm font-medium ${activeTab === 'upload_players' ? 'bg-slate-800 text-emerald-400 border-b-2 border-emerald-500' : 'bg-slate-900/50 text-slate-400'}`}>Players</button>
+            <button onClick={() => setActiveTab('upload_teams')} className={`flex-1 py-3 text-sm font-medium ${activeTab === 'upload_teams' ? 'bg-slate-800 text-emerald-400 border-b-2 border-emerald-500' : 'bg-slate-900/50 text-slate-400'}`}>Teams</button>
+            <button onClick={() => setActiveTab('reset')} className={`flex-1 py-3 text-sm font-medium ${activeTab === 'reset' ? 'bg-slate-800 text-amber-400 border-b-2 border-amber-500' : 'bg-slate-900/50 text-slate-400'}`}>Reset</button>
         </div>
 
-        {/* Content */}
-        <div ref={contentRef} className="p-6 overflow-y-auto custom-scrollbar flex-1">
-            
+        <div ref={contentRef} className="p-6 overflow-y-auto flex-1">
             {notification && (
                 <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${notification.type === 'success' ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-900' : 'bg-rose-900/20 text-rose-400 border border-rose-900'}`}>
-                    {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                    {notification.msg}
+                    <CheckCircle className="w-5 h-5" /> {notification.msg}
                 </div>
             )}
-
             {activeTab === 'upload_players' && (
                 <div className="space-y-6">
-                    <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                        <h3 className="font-bold text-white mb-2">CSV Format Requirement</h3>
-                        <p className="text-sm text-slate-400 mb-2">
-                            Upload a CSV file with the following columns (headers optional):
-                        </p>
-                        <div className="bg-slate-950 p-3 rounded font-mono text-xs text-slate-300 overflow-x-auto">
-                            | ID  | Name           | Category | Role      |<br/>
-                            | A01 | Tahsin         | A        | Bowler    |<br/>
-                            | B05 | Player Name    | B        | Batsman   |
-                        </div>
-                    </div>
-                    
-                    <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center hover:bg-slate-700/30 transition-colors cursor-pointer" onClick={() => playerFileInputRef.current?.click()}>
+                    <button onClick={handleSeedOfficialPlayers} disabled={isSeeding} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl font-black text-sm flex items-center justify-center gap-3">
+                        {isSeeding ? <RefreshCw className="animate-spin" /> : <Stars />} SEED OFFICIAL LIST
+                    </button>
+                    <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center" onClick={() => playerFileInputRef.current?.click()}>
                         <Upload className="w-12 h-12 text-slate-500 mb-4" />
-                        <span className="text-slate-300 font-medium">Click to upload Players CSV</span>
-                        <input 
-                            type="file" 
-                            accept=".csv"
-                            ref={playerFileInputRef}
-                            className="hidden"
-                            onChange={handlePlayerFileUpload}
-                        />
+                        <span className="text-slate-300">Click to upload Players CSV</span>
+                        <input type="file" accept=".csv" ref={playerFileInputRef} className="hidden" onChange={handlePlayerFileUpload} />
                     </div>
                 </div>
             )}
-
             {activeTab === 'upload_teams' && (
                 <div className="space-y-6">
-                    <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                        <h3 className="font-bold text-white mb-2">CSV Format Requirement</h3>
-                        <p className="text-sm text-slate-400 mb-2">
-                            Upload a CSV file with the following columns (headers optional):
-                        </p>
-                        <div className="bg-slate-950 p-3 rounded font-mono text-xs text-slate-300 overflow-x-auto">
-                            | ID  | Name           |<br/>
-                            | T01 | Debug Devils   |<br/>
-                            | T02 | Code Crushers  |
-                        </div>
-                        <p className="text-xs text-rose-400 mt-2 font-semibold">
-                            Note: Uploading teams will remove existing teams and unassign any sold players.
-                        </p>
-                    </div>
-                    
-                    <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center hover:bg-slate-700/30 transition-colors cursor-pointer" onClick={() => teamFileInputRef.current?.click()}>
+                    <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center" onClick={() => teamFileInputRef.current?.click()}>
                         <Upload className="w-12 h-12 text-slate-500 mb-4" />
-                        <span className="text-slate-300 font-medium">Click to upload Teams CSV</span>
-                        <input 
-                            type="file" 
-                            accept=".csv"
-                            ref={teamFileInputRef}
-                            className="hidden"
-                            onChange={handleTeamFileUpload}
-                        />
+                        <span className="text-slate-300">Click to upload Teams CSV</span>
+                        <input type="file" accept=".csv" ref={teamFileInputRef} className="hidden" onChange={handleTeamFileUpload} />
                     </div>
                 </div>
             )}
-
             {activeTab === 'reset' && (
-                <div className="space-y-6">
-                    <div className="bg-amber-900/10 border border-amber-900/50 p-4 rounded-lg">
-                        <h3 className="font-bold text-amber-500 mb-2">Reset Auction State</h3>
-                        <p className="text-sm text-slate-400 mb-4">
-                            Restore the auction to the beginning. 
-                            <ul className="list-disc pl-5 mt-2 space-y-1">
-                                <li>All players marked as AVAILABLE (Unsold).</li>
-                                <li>All team budgets restored to full amount.</li>
-                                <li>Auction phase reset to Setup.</li>
-                                <li>No teams or players are deleted.</li>
-                            </ul>
-                        </p>
-                        <button 
-                            onClick={handleResetState}
-                            className="w-full bg-amber-700 hover:bg-amber-600 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2"
-                        >
-                            <RefreshCw className="w-4 h-4" /> Reset Auction State
-                        </button>
-                    </div>
-                </div>
+                <button onClick={handleResetState} className="w-full bg-amber-700 hover:bg-amber-600 text-white py-3 rounded-lg font-black text-sm flex items-center justify-center gap-2">
+                    <RefreshCw className="w-4 h-4" /> RESET AUCTION FLOOR
+                </button>
             )}
-
         </div>
       </div>
     </div>

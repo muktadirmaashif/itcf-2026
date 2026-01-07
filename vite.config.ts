@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -5,8 +6,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // Needed for Docker port mapping
+    host: '0.0.0.0',
+    port: 7001,
     strictPort: true,
-    port: 5173
+    // Set to true to allow all hosts (localhost, ngrok, etc.) and prevent "Connection reset by peer"
+    allowedHosts: true,
+    watch: {
+      usePolling: true
+    }
   }
 })

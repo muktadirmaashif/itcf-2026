@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -13,7 +14,7 @@ export const Login = ({ onLogin }: LoginProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'auctioneer' && password === 'itcf2026') {
+    if (username === 'auctioneer' && password === 'tpl2026') {
       onLogin();
     } else {
       setError('Invalid credentials');

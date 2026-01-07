@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuctionProvider } from './context/AuctionContext';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -13,9 +14,9 @@ const AppRoutes = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check local storage for session
     const auth = localStorage.getItem('it_auction_auth');
     if (auth === 'true') {
       setIsAuthenticated(true);
@@ -26,11 +27,13 @@ const AppRoutes = () => {
   const handleLogin = () => {
     setIsAuthenticated(true);
     localStorage.setItem('it_auction_auth', 'true');
+    navigate('/auctioneer');
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('it_auction_auth');
+    navigate('/dashboard');
   };
 
   if (loading) return null;
@@ -84,6 +87,7 @@ const AppRoutes = () => {
             )
           } 
         />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <DataManagementModal isOpen={isDataModalOpen} onClose={() => setIsDataModalOpen(false)} />
     </>

@@ -1,3 +1,4 @@
+
 export enum PlayerCategory {
   A = 'A',
   B = 'B',
@@ -14,7 +15,7 @@ export interface Player {
   id: string;
   name: string;
   category: PlayerCategory;
-  role: string; // Batsman, Bowler, All-rounder, Wicketkeeper
+  role: string;
   basePrice: number;
   status: PlayerStatus;
   soldPrice?: number;
@@ -25,7 +26,8 @@ export interface Player {
 export interface Team {
   id: string;
   name: string;
-  budget: number; // Remaining budget
+  captain?: string;
+  budget: number;
   spent: number;
   players: Player[];
   categoryCounts: {
@@ -49,7 +51,7 @@ export interface BidState {
   currentPlayerId: string | null;
   currentBidPrice: number;
   currentBidderTeamId: string | null;
-  history: { teamId: string; amount: number }[];
+  history: { teamId: string; amount?: number; type: string; playerName?: string; timestamp: number }[];
 }
 
 export interface AuctionContextType {
@@ -58,7 +60,6 @@ export interface AuctionContextType {
   phase: AuctionPhase;
   bidState: BidState;
   lastProcessedId: string | null;
-  // Actions
   addTeam: (name: string) => void;
   startAuction: () => void;
   nextPlayer: () => void;
@@ -66,11 +67,12 @@ export interface AuctionContextType {
   soldPlayer: () => void;
   unsoldPlayer: () => void;
   undoLastAuction: () => Promise<void>;
+  clearHistory: () => Promise<void>;
   setPhase: (phase: AuctionPhase) => void;
   resetAuction: (keepPlayers?: boolean) => Promise<void>;
   setupNewAuction: (teamNames: string[], players?: Player[]) => Promise<void>;
   importPlayers: (data: Player[]) => Promise<void>;
-  importTeams: (teams: {id: string, name: string}[]) => Promise<void>;
+  importTeams: (teams: {id: string, name: string, captain?: string}[]) => Promise<void>;
   getPlayerById: (id: string) => Player | undefined;
   getTeamById: (id: string) => Team | undefined;
 }

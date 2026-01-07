@@ -1,7 +1,8 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Player, PlayerCategory } from '../types';
-import { User, Shield, Activity, Target } from 'lucide-react';
-import { formatCurrency } from '../utils/format';
+import { User } from 'lucide-react';
+import { formatCurrency, getPlayerImagePath } from '../utils/format';
 
 interface PlayerCardProps {
   player: Player;
@@ -9,6 +10,8 @@ interface PlayerCardProps {
 }
 
 export const PlayerCard = ({ player, isSpotlight = false }: PlayerCardProps) => {
+  const [imgError, setImgError] = useState(false);
+
   const getCategoryColor = (cat: PlayerCategory) => {
     switch (cat) {
       case PlayerCategory.A: return 'bg-rose-600';
@@ -20,13 +23,25 @@ export const PlayerCard = ({ player, isSpotlight = false }: PlayerCardProps) => 
 
   return (
     <div className={`relative overflow-hidden rounded-2xl bg-slate-800 border ${isSpotlight ? 'border-emerald-500 shadow-2xl shadow-emerald-900/50' : 'border-slate-700'}`}>
-      <div className={`absolute top-0 right-0 px-4 py-1 rounded-bl-xl text-xs font-bold text-white ${getCategoryColor(player.category)}`}>
+      <div className={`absolute top-0 right-0 px-4 py-1 rounded-bl-xl text-xs font-bold text-white z-20 ${getCategoryColor(player.category)}`}>
         CATEGORY {player.category}
       </div>
       
       <div className="p-6 flex flex-col items-center text-center">
-        <div className={`mb-4 rounded-full flex items-center justify-center bg-slate-700 ${isSpotlight ? 'w-32 h-32' : 'w-20 h-20'}`}>
-           <User className={`${isSpotlight ? 'w-16 h-16' : 'w-10 h-10'} text-slate-400`} />
+        <div className={`mb-4 rounded-full overflow-hidden flex items-center justify-center bg-slate-900 border-2 border-slate-700 shadow-inner relative group ${isSpotlight ? 'w-32 h-32' : 'w-20 h-20'}`}>
+           {!imgError ? (
+             <img 
+               src={getPlayerImagePath(player)} 
+               alt={player.name}
+               loading="lazy"
+               className="w-full h-full object-cover transition-opacity duration-300"
+               onError={() => setImgError(true)}
+             />
+           ) : (
+             <div className="flex items-center justify-center w-full h-full bg-slate-800">
+                <User className={`${isSpotlight ? 'w-16 h-16' : 'w-10 h-10'} text-slate-600`} />
+             </div>
+           )}
         </div>
         
         <h3 className={`${isSpotlight ? 'text-3xl' : 'text-xl'} font-bold text-white mb-2`}>{player.name}</h3>
