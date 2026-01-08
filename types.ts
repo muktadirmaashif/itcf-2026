@@ -1,4 +1,5 @@
 
+
 export enum PlayerCategory {
   A = 'A',
   B = 'B',
@@ -51,7 +52,16 @@ export interface BidState {
   currentPlayerId: string | null;
   currentBidPrice: number;
   currentBidderTeamId: string | null;
-  history: { teamId: string; amount?: number; type: string; playerName?: string; timestamp: number }[];
+  // Added interests tracking for Category C and locking state
+  isInterestLocked: boolean;
+  interests: Record<string, string[]>;
+  history: { 
+    teamId: string; 
+    amount?: number; 
+    type: string; 
+    playerName?: string; 
+    timestamp: number 
+  }[];
 }
 
 export interface AuctionContextType {
@@ -60,6 +70,7 @@ export interface AuctionContextType {
   phase: AuctionPhase;
   bidState: BidState;
   lastProcessedId: string | null;
+  auctioneerPassword?: string;
   addTeam: (name: string) => void;
   startAuction: () => void;
   nextPlayer: () => void;
@@ -70,9 +81,11 @@ export interface AuctionContextType {
   clearHistory: () => Promise<void>;
   setPhase: (phase: AuctionPhase) => void;
   resetAuction: (keepPlayers?: boolean) => Promise<void>;
-  setupNewAuction: (teamNames: string[], players?: Player[]) => Promise<void>;
   importPlayers: (data: Player[]) => Promise<void>;
   importTeams: (teams: {id: string, name: string, captain?: string}[]) => Promise<void>;
   getPlayerById: (id: string) => Player | undefined;
   getTeamById: (id: string) => Team | undefined;
+  // Added for Team Dashboard interactions
+  toggleInterest: (playerId: string, teamId: string) => Promise<void>;
+  setInterestLocked: (locked: boolean) => Promise<void>;
 }

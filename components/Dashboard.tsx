@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { PlayerStatus, Player, Team } from '../types';
-import { Crown, Trophy, Gavel, Zap, ClipboardList, History, Sparkles, User, Ban, TrendingUp, Shield } from 'lucide-react';
+import { Crown, Trophy, Gavel, Zap, ClipboardList, History, Sparkles, User, Ban, TrendingUp, Shield, Star } from 'lucide-react';
 import { formatCurrency, getPlayerImagePath } from '../utils/format';
 
 const CelebrationEffect = () => {
@@ -43,7 +43,6 @@ interface RosterItemProps {
   player: Player;
 }
 
-// Fix: Explicitly type as React.FC to allow 'key' prop when rendering in lists
 const RosterItem: React.FC<RosterItemProps> = ({ player }) => {
   const [error, setError] = useState(false);
   return (
@@ -302,18 +301,18 @@ export const Dashboard = () => {
                       {lastPlayer.status === PlayerStatus.SOLD && <Sparkles className="w-6 h-6 text-emerald-500 animate-pulse" />}
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-3 mb-6 max-w-xl mx-auto w-full">
-                        <div className="bg-slate-900/80 p-3 rounded-2xl border border-white/5 shadow-lg">
-                            <p className="text-[8px] text-slate-500 font-black mb-1 uppercase tracking-widest text-center">ROLE</p>
-                            <p className="text-white font-black text-[10px] uppercase truncate text-center">{lastPlayer.role}</p>
+                    <div className="grid grid-cols-3 gap-6 mb-8 max-w-3xl mx-auto w-full">
+                        <div className="bg-slate-900/80 p-6 rounded-2xl border border-white/5 shadow-lg flex flex-col justify-center min-h-[120px]">
+                            <p className="text-[10px] text-slate-500 font-black mb-2 uppercase tracking-widest text-center">ROLE</p>
+                            <p className="text-white font-black text-lg uppercase truncate text-center">{lastPlayer.role}</p>
                         </div>
-                        <div className={`bg-slate-900/80 p-3 rounded-2xl border ${lastPlayer.status === PlayerStatus.SOLD ? 'border-emerald-500/20' : 'border-white/5'} shadow-lg`}>
-                            <p className="text-[8px] text-slate-500 font-black mb-1 uppercase tracking-widest text-center">TEAM</p>
-                            <p className="text-emerald-400 font-black text-[10px] uppercase truncate leading-tight text-center">{lastPlayer.status === PlayerStatus.SOLD ? getTeamById(lastPlayer.soldToTeamId!)?.name : 'UNSOLD'}</p>
+                        <div className={`bg-slate-900/80 p-6 rounded-2xl border ${lastPlayer.status === PlayerStatus.SOLD ? 'border-emerald-500/20' : 'border-white/5'} shadow-lg flex flex-col justify-center min-h-[120px]`}>
+                            <p className="text-[10px] text-slate-500 font-black mb-2 uppercase tracking-widest text-center">TEAM</p>
+                            <p className="text-emerald-400 font-black text-lg uppercase truncate leading-tight text-center">{lastPlayer.status === PlayerStatus.SOLD ? getTeamById(lastPlayer.soldToTeamId!)?.name : 'UNSOLD'}</p>
                         </div>
-                        <div className="bg-slate-900/80 p-3 rounded-2xl border border-white/5 shadow-lg">
-                            <p className="text-[8px] text-slate-500 font-black mb-1 uppercase tracking-widest text-center">PRICE</p>
-                            <p className="text-white font-mono font-black text-[10px] text-center">{lastPlayer.soldPrice ? formatCurrency(lastPlayer.soldPrice) : <span className="text-slate-600">---</span>}</p>
+                        <div className="bg-slate-900/80 p-6 rounded-2xl border border-white/5 shadow-lg flex flex-col justify-center min-h-[120px]">
+                            <p className="text-[10px] text-slate-500 font-black mb-2 uppercase tracking-widest text-center">PRICE</p>
+                            <p className="text-white font-mono font-black text-lg text-center">{lastPlayer.soldPrice ? formatCurrency(lastPlayer.soldPrice) : <span className="text-slate-600">---</span>}</p>
                         </div>
                     </div>
                     <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.5em] mt-2 animate-pulse">Awaiting Next Player</p>
@@ -355,7 +354,6 @@ export const Dashboard = () => {
                   <div className="flex justify-between items-start mb-6">
                       <div className="min-w-0">
                         <h3 className="font-black text-xl text-white truncate leading-none uppercase tracking-tighter mb-1">{team.name}</h3>
-                        {team.captain && <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest truncate">{team.captain}</p>}
                       </div>
                       <span className="text-[10px] text-slate-500 bg-slate-900/80 px-2 py-1 rounded-md font-black uppercase border border-white/5">{team.players.length} / 15</span>
                   </div>
@@ -376,11 +374,17 @@ export const Dashboard = () => {
                         <ClipboardList className="w-3 h-3" /> Active Roster
                       </p>
                       <div className="bg-slate-900/50 rounded-2xl p-3 flex-1 border border-white/5">
-                          {/* Captain Header */}
-                          <div className="mb-3 pb-2 border-b border-white/10 flex items-center gap-2 text-emerald-400">
-                             <Crown className="w-3.5 h-3.5" />
-                             <span className="text-[10px] font-black uppercase tracking-widest">{team.captain || 'NO CAPTAIN ASSIGNED'}</span>
+                          {/* Captain Entry at the beginning of the list */}
+                          <div className="flex items-center gap-3 py-2 border-b border-emerald-500/30 -mx-2 px-2 mb-2 rounded-t-xl bg-emerald-500/5">
+                             <div className="w-8 h-8 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                                <Crown className="w-4 h-4" />
+                             </div>
+                             <div className="min-w-0">
+                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest truncate">{team.captain || 'TEAM CAPTAIN'}</p>
+                                <p className="text-[8px] text-slate-500 font-black uppercase tracking-tighter">Assigned Leader</p>
+                             </div>
                           </div>
+
                           {team.players.length === 0 ? (
                             <p className="text-[10px] text-slate-600 italic py-2">No players acquired</p>
                           ) : (

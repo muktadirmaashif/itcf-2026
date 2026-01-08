@@ -11,6 +11,9 @@ export default defineConfig({
     strictPort: true,
     // Set to true to allow all hosts (localhost, ngrok, etc.) and prevent "Connection reset by peer"
     allowedHosts: true,
+    hmr: {
+      clientPort: 7001,
+    },
     watch: {
       usePolling: true
     }
